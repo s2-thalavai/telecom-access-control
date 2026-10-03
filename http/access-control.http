@@ -1,0 +1,51 @@
+### Password for every user: Telecom@123
+### alice=CUSTOMER(TN, owns 9876543210)  ravi=AGENT(TN)  sita=SUPERVISOR(TN)
+### kiran=SUPERVISOR(KA, CONTRACTOR)     admin=ADMIN(ALL)
+
+### Effective roles, permissions and attributes
+GET http://localhost:8080/api/v1/me
+Authorization: Basic sita Telecom@123
+
+### RBAC+ABAC: agent reads own-circle line -> 200
+GET http://localhost:8080/api/v1/subscribers/9876543210
+Authorization: Basic ravi Telecom@123
+
+### ABAC: agent reads VIP line -> 403
+GET http://localhost:8080/api/v1/subscribers/9876543211
+Authorization: Basic ravi Telecom@123
+
+### Content negotiation: full PII (supervisor+) -> 200
+GET http://localhost:8080/api/v1/subscribers/9876543211
+Authorization: Basic sita Telecom@123
+Accept: application/vnd.telecom.subscriber-full+json
+
+### Refund within limit -> 200
+POST http://localhost:8080/api/v1/subscribers/9876543210/refund
+Authorization: Basic sita Telecom@123
+Content-Type: application/json
+
+{"amount": 500}
+
+### CSV export from internal channel -> 200
+GET http://localhost:8080/api/v1/reports/subscribers
+Authorization: Basic sita Telecom@123
+Accept: text/csv
+X-Channel: INTERNAL
+
+### Dynamic RBAC: grant refund to AGENT
+PUT http://localhost:8080/api/v1/admin/roles/AGENT/permissions/recharge:refund
+Authorization: Basic admin Telecom@123
+
+### Dynamic ABAC: set AGENT refund limit
+PUT http://localhost:8080/api/v1/admin/policies/refund.limit.AGENT
+Authorization: Basic admin Telecom@123
+Content-Type: application/json
+
+{"value": "200"}
+
+### Dynamic ABAC: move ravi to Karnataka circle
+PATCH http://localhost:8080/api/v1/admin/users/ravi/attributes
+Authorization: Basic admin Telecom@123
+Content-Type: application/json
+
+{"circle": "KA"}

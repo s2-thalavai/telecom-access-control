@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: telecom-access-control
+  datasource:
+    url: jdbc:h2:mem:telecomdb;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+
+telecom:
+  abac:
+    engine: local                     # local | opa
+    zone-id: Asia/Kolkata             # environment attribute: business hours are evaluated in IST
+    opa-url: http://localhost:8181/v1/data/telecom/authz/decision
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+logging:
+  level:
+    com.telecom: DEBUG
+    org.springframework.security: INFO
+    # org.springframework.security.authorization: TRACE    # see every authorization decision
